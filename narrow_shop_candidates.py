@@ -37,32 +37,44 @@ def convert_to_address(latitude, longitude):
         address += address_elem
     return address
 
-
-def narrow_shop_candidates(latitude, longitude):
+def create_url(latitude, longitude, offset):
     url = "https://api.gnavi.co.jp/RestSearchAPI/20150630/"
     keyid = "ab49331ac199361e2a76b0248d49add2"
-    #address = convert_to_address(latitude,longitude)
+    # address = convert_to_address(latitude,longitude)
     address = '神奈川県横浜市西区みなとみらい2-2-1'
     query = [
         ("format", "json"),
         ("keyid", keyid),
-        ("address", address)
+        ("address", address),
+        ("offset", offset)
     ]
     url += "?{0}".format(urllib.parse.urlencode(query))
-    try:
-        result = urllib.request.urlopen(url).read()
-    except ValueError:
-        print("APIアクセスに失敗しました。")
-        sys.exit()
-    data = json.loads(result.decode('utf-8'))
+    return url
 
+def get_data(latitude, longitude, offset):
+    url = create_url(latitude, longitude, offset)
+    result = send_requsest(url)
+    data = json.loads(result.decode('utf-8'))
     if "error" in data:
         if "message" in data:
             print("{0}".format(data["message"]))
         else:
             print("データ取得に失敗しました。")
         sys.exit()
+    if not "rest" in data:
+        print("レストランデータが見つからなかったため終了します。")
+        sys.exit()
+    return data
 
+def send_requsest(url):
+    try:
+        result = urllib.request.urlopen(url).read()
+    except ValueError:
+        print("APIアクセスに失敗しました。")
+        sys.exit()
+    return result
+
+def show_total_hit(data):
     total_hit_count = None
     if "total_hit_count" in data:
         total_hit_count = data["total_hit_count"]
@@ -71,20 +83,28 @@ def narrow_shop_candidates(latitude, longitude):
         print("指定した内容ではヒットしませんでした。")
         sys.exit()
 
-    if not "rest" in data:
-        print("レストランデータが見つからなかったため終了します。")
-        sys.exit()
-
     print("{0}件ヒットしました。".format(total_hit_count))
     print("----")
+    return int(total_hit_count)
 
+
+def narrow_shop_candidates(latitude, longitude, offset):
+    data = get_data(latitude, longitude, offset)
     candidates = []
-    print(len(data['rest']))
-    for shop_data in data['rest']:
-        candidates.append(shop_data['name'])
+    append_count = 0
+    total_hit_count = show_total_hit(data)
 
+    while total_hit_count > 0:
+        if append_count % 10 == 0:
+            data = get_data(latitude, longitude, append_count)
+        for shop_data in data['rest']:
+            if total_hit_count == 0:
+                break
+            candidates.append(shop_data['name'])
+            total_hit_count -= 1
+            append_count += 1
     print(candidates)
-    #print(json.dumps(data, ensure_ascii=False, indent=2))
+    print(len(candidates))
 
 
-narrow_shop_candidates(35.659272, 139.697958)
+narrow_shop_candidates(35.659272, 139.697958, 1)
