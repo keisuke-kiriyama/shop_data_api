@@ -3,7 +3,7 @@
 import sys
 import urllib.request
 import json
-
+import os
 
 def is_str(data=None):
     if isinstance(data, str):
@@ -12,7 +12,7 @@ def is_str(data=None):
         return False
 
 
-keyid = "ab49331ac199361e2a76b0248d49add2"
+keyid = os.environ.get('GURUNAVI_API_KEY')
 url = "https://api.gnavi.co.jp/RestSearchAPI/20150630/"
 latitude = "35.659272"
 longitude = "139.697958"

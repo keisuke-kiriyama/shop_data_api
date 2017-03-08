@@ -4,6 +4,7 @@ import sys
 import json
 import urllib.request
 import urllib.parse
+import os
 
 
 def is_str(data=None):
@@ -15,7 +16,7 @@ def is_str(data=None):
 
 def convert_to_address(latitude, longitude):
     url = 'https://maps.googleapis.com/maps/api/geocode/json'
-    keyid = 'AIzaSyDtqR5cHQQhd3maSOgUUTDHJjbIgHmaORs'
+    keyid = os.environ.get('GOOGLE_API_KEY')
     latlng = str(latitude) + ',' +str(longitude)
     query = [
         ("format", "json"),
@@ -35,13 +36,16 @@ def convert_to_address(latitude, longitude):
     address = ''
     for address_elem in split_address[2:]:
         address += address_elem
+    if '丁目' in address:
+        address = address.replace('丁目','-')
     return address
 
 def create_url(latitude, longitude, offset):
     url = "https://api.gnavi.co.jp/RestSearchAPI/20150630/"
-    keyid = "ab49331ac199361e2a76b0248d49add2"
-    # address = convert_to_address(latitude,longitude)
-    address = '神奈川県横浜市西区みなとみらい2-2-1'
+    keyid = os.environ.get('GURUNAVI_API_KEY')
+
+    address = convert_to_address(latitude,longitude)
+    #address = '神奈川県横浜市西区みなとみらい2-３'
     query = [
         ("format", "json"),
         ("keyid", keyid),
@@ -107,4 +111,8 @@ def narrow_shop_candidates(latitude, longitude, offset):
     print(len(candidates))
 
 
-narrow_shop_candidates(35.659272, 139.697958, 1)
+if __name__ == '__main__':
+    latitude = sys.argv[1]
+    longitude = sys.argv[2]
+    narrow_shop_candidates(latitude, longitude, 1)
+    #narrow_shop_candidates(35.659272, 139.697958, 1)
