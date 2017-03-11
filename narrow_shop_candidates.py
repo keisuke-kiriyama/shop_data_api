@@ -5,6 +5,7 @@ import json
 import urllib.request
 import urllib.parse
 import os
+import re
 
 
 def is_str(data=None):
@@ -32,20 +33,20 @@ def convert_to_address(latitude, longitude):
         sys.exit()
     data = json.loads(result.decode('utf-8'))
     address = data['results'][0]["formatted_address"]
+    if address[-1] != [0-9]:
+        address = data['results'][1]["formatted_address"]
     split_address = address.split(' ')
     address = ''
     for address_elem in split_address[2:]:
         address += address_elem
     if '丁目' in address:
         address = address.replace('丁目','-')
+    print(address)
     return address
 
-def create_url(latitude, longitude, offset):
+def create_url(offset, address):
     url = "https://api.gnavi.co.jp/RestSearchAPI/20150630/"
     keyid = os.environ.get('GURUNAVI_API_KEY')
-
-    address = convert_to_address(latitude,longitude)
-    #address = '神奈川県横浜市西区みなとみらい2-３'
     query = [
         ("format", "json"),
         ("keyid", keyid),
@@ -55,8 +56,8 @@ def create_url(latitude, longitude, offset):
     url += "?{0}".format(urllib.parse.urlencode(query))
     return url
 
-def get_data(latitude, longitude, offset):
-    url = create_url(latitude, longitude, offset)
+def get_data(offset,address):
+    url = create_url(offset, address)
     result = send_requsest(url)
     data = json.loads(result.decode('utf-8'))
     if "error" in data:
@@ -93,14 +94,19 @@ def show_total_hit(data):
 
 
 def narrow_shop_candidates(latitude, longitude, offset):
-    data = get_data(latitude, longitude, offset)
+    address = convert_to_address(latitude,longitude)
+    #address = '東京都大田区東雪谷２-４−６'
+    data = get_data(offset, address)
     candidates = []
     append_count = 0
     total_hit_count = show_total_hit(data)
-
-    while total_hit_count > 0:
+    if total_hit_count == 1:
+        data = get_data(0, address)
+        shop_data = data['rest']['name']
+        candidates.append(shop_data)
+    while total_hit_count > 1:
         if append_count % 10 == 0:
-            data = get_data(latitude, longitude, append_count)
+            data = get_data(append_count, address)
         for shop_data in data['rest']:
             if total_hit_count == 0:
                 break
@@ -108,11 +114,9 @@ def narrow_shop_candidates(latitude, longitude, offset):
             total_hit_count -= 1
             append_count += 1
     print(candidates)
-    print(len(candidates))
 
 
 if __name__ == '__main__':
     latitude = sys.argv[1]
     longitude = sys.argv[2]
     narrow_shop_candidates(latitude, longitude, 1)
-    #narrow_shop_candidates(35.659272, 139.697958, 1)
