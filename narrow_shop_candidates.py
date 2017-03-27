@@ -5,7 +5,6 @@ import json
 import urllib.request
 import urllib.parse
 import os
-import re
 
 
 def is_str(data=None):
@@ -94,8 +93,9 @@ def show_total_hit(data):
 
 
 def narrow_shop_candidates(latitude, longitude, offset):
-    address = convert_to_address(latitude,longitude)
-    #address = '東京都大田区東雪谷２-４−６'
+    #address = convert_to_address(latitude,longitude)
+    address = '東京都品川区東五反田１-１４−１４'
+    print(address)
     data = get_data(offset, address)
     candidates = []
     append_count = 0
@@ -113,10 +113,11 @@ def narrow_shop_candidates(latitude, longitude, offset):
             candidates.append(shop_data['name'])
             total_hit_count -= 1
             append_count += 1
-    print(candidates)
+    return candidates
 
 
 if __name__ == '__main__':
     latitude = sys.argv[1]
     longitude = sys.argv[2]
-    narrow_shop_candidates(latitude, longitude, 1)
+    candidates = narrow_shop_candidates(latitude, longitude, 1)
+    print(candidates)

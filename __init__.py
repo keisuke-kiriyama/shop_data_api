@@ -1,0 +1,1 @@
+from narrow_shop_candidates import narrow_shop_candidates

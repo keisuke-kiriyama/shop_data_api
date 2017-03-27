@@ -28,7 +28,7 @@ query = [
 url += "?{0}".format(urllib.parse.urlencode(query))
 
 try:
-    result = urllib.request.urlopen(url).read()
+    result = urllib.request.urlopen(url).read()l
 except ValueError:
     print("APIアクセスに失敗しました。")
     sys.exit()
